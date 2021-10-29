@@ -74,6 +74,11 @@ pub struct Config {
     trusted_servers: Vec<Box<ServerName>>,
     #[serde(default = "default_log")]
     pub log: String,
+    /// If enabled, Conduit will serve /.wellknown/matrix files that point to the configured server_name.
+    /// This should make it easier, if you only host Conduit on the same domain as the server_name.
+    /// E.g. setting server_name: "matrix.example.com" -> other servers are directed to "https://matrix.example.com:443"
+    #[serde(default = "false_fn")]
+    pub serve_wellknown: bool,
 
     #[serde(flatten)]
     catchall: BTreeMap<String, IgnoredAny>,

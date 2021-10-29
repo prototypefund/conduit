@@ -10,6 +10,7 @@
 pub mod appservice_server;
 pub mod client_server;
 pub mod server_server;
+pub mod well_known;
 
 mod database;
 mod error;
@@ -40,8 +41,17 @@ use tokio::sync::RwLock;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
 fn setup_rocket(config: Figment, data: Arc<RwLock<Database>>) -> rocket::Rocket<rocket::Build> {
-    rocket::custom(config)
-        .manage(data)
+    let rocket_builder = rocket::custom(config).manage(data);
+
+    // If configured, serve .well-known/matrix files
+    if data.lock().globals.serve_wellknown() {
+        rocket_builder.mount(
+            "/",
+            routes![well_known::well_known_server, well_known::well_known_client,],
+        );
+    }
+
+    rocket_builder
         .mount(
             "/",
             routes![

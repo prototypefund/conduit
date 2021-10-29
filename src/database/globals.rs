@@ -226,6 +226,10 @@ impl Globals {
         self.jwt_decoding_key.as_ref()
     }
 
+    pub fn serve_wellknown(&self) -> bool {
+        self.config.serve_wellknown
+    }
+
     /// TODO: the key valid until timestamp is only honored in room version > 4
     /// Remove the outdated keys and insert the new ones.
     ///
