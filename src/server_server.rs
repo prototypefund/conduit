@@ -43,6 +43,7 @@ use ruma::{
         receipt::{ReceiptEvent, ReceiptEventContent},
         room::{
             create::RoomCreateEventContent,
+            join_rules::{JoinRule, RoomJoinRulesEventContent},
             member::{MembershipState, RoomMemberEventContent},
             server_acl::RoomServerAclEventContent,
         },
@@ -2654,6 +2655,33 @@ pub fn create_join_event_template_route(
 
     acl_check(sender_servername, &body.room_id, &db)?;
 
+    // TODO: Conduit does not implement restricted join rules yet, we always reject
+    let join_rules_event = db
+        .rooms
+        .room_state_get(&body.room_id, &EventType::RoomJoinRules, "")?;
+
+    let join_rules_event_content: Option<RoomJoinRulesEventContent> = join_rules_event
+        .as_ref()
+        .map(|join_rules_event| {
+            serde_json::from_str(join_rules_event.content.get()).map_err(|e| {
+                warn!("Invalid join rules event: {}", e);
+                Error::bad_database("Invalid join rules event in db.")
+            })
+        })
+        .transpose()?;
+
+    if let Some(join_rules_event_content) = join_rules_event_content {
+        if matches!(
+            join_rules_event_content.join_rule,
+            JoinRule::Restricted { .. }
+        ) {
+            return Err(Error::BadRequest(
+                ErrorKind::Unknown,
+                "Conduit does not support restricted rooms yet.",
+            ));
+        }
+    }
+
     let prev_events: Vec<_> = db
         .rooms
         .get_pdu_leaves(&body.room_id)?
@@ -2822,6 +2850,33 @@ async fn create_join_event(
     }
 
     acl_check(sender_servername, room_id, &db)?;
+
+    // TODO: Conduit does not implement restricted join rules yet, we always reject
+    let join_rules_event = db
+        .rooms
+        .room_state_get(room_id, &EventType::RoomJoinRules, "")?;
+
+    let join_rules_event_content: Option<RoomJoinRulesEventContent> = join_rules_event
+        .as_ref()
+        .map(|join_rules_event| {
+            serde_json::from_str(join_rules_event.content.get()).map_err(|e| {
+                warn!("Invalid join rules event: {}", e);
+                Error::bad_database("Invalid join rules event in db.")
+            })
+        })
+        .transpose()?;
+
+    if let Some(join_rules_event_content) = join_rules_event_content {
+        if matches!(
+            join_rules_event_content.join_rule,
+            JoinRule::Restricted { .. }
+        ) {
+            return Err(Error::BadRequest(
+                ErrorKind::Unknown,
+                "Conduit does not support restricted rooms yet.",
+            ));
+        }
+    }
 
     // We need to return the state prior to joining, let's keep a reference to that here
     let shortstatehash = db

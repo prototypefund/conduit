@@ -52,7 +52,7 @@ impl PduEvent {
         self.unsigned = None;
 
         let allowed: &[&str] = match self.kind {
-            EventType::RoomMember => &["membership"],
+            EventType::RoomMember => &["join_authorised_via_users_server", "membership"],
             EventType::RoomCreate => &["creator"],
             EventType::RoomJoinRules => &["join_rule"],
             EventType::RoomPowerLevels => &[
