@@ -3,6 +3,7 @@ stages:
   - build docker image
   - test
   - upload artifacts
+  - deploy
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -304,6 +305,38 @@ publish:package:
     - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file conduit-arm-unknown-linux-musleabihf "${BASE_URL}/conduit-arm-unknown-linux-musleabihf"'
     - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file conduit-armv7-unknown-linux-musleabihf "${BASE_URL}/conduit-armv7-unknown-linux-musleabihf"'
     - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file conduit-aarch64-unknown-linux-musl "${BASE_URL}/conduit-aarch64-unknown-linux-musl"'
+
+# --------------------------------------------------------------------- #
+#  Docs testing and publishing                                          #
+# --------------------------------------------------------------------- #
+
+test docs:
+  stage: test
+  needs: []
+  image: "registry.gitlab.com/jfowl/conduit-containers/rust-with-tools:latest"
+  script:
+    - mdbook build --dest-dir ./public
+  rules:
+    - if: '$CI_COMMIT_REF_NAME != "master"'
+      changes:
+        - docs/*
+        - book.toml
+        - gitlab-ci.yml
+  artifacts:
+    paths:
+      - public
+
+pages:
+  stage: deploy
+  needs: []
+  image: "registry.gitlab.com/jfowl/conduit-containers/rust-with-tools:latest"
+  script:
+    - mdbook build --dest-dir ./public
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "master"'
+  artifacts:
+    paths:
+      - public
 
 # Avoid duplicate pipelines
 # See: https://docs.gitlab.com/ee/ci/yaml/workflow.html#switch-between-branch-pipelines-and-merge-request-pipelines

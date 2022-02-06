@@ -1,8 +1,8 @@
 # Deploy using Docker
 
-> **Note:** To run and use Conduit you should probably use it with a Domain or Subdomain behind a reverse proxy (like Nginx, Traefik, Apache, ...) with a Lets Encrypt certificate.
+{{#include ../_getting_help.md}}
 
-## Docker
+> **Note:** To run and use Conduit you should probably use it with a Domain or Subdomain behind a reverse proxy (like Nginx, Traefik, Apache, ...) with a Lets Encrypt certificate.
 
 ### Build & Dockerfile
 
