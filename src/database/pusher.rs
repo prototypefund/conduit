@@ -1,4 +1,4 @@
-use crate::{Database, Error, PduEvent, Result};
+use crate::{utils, Database, Error, PduEvent, Result};
 use bytes::BytesMut;
 use ruma::{
     api::{

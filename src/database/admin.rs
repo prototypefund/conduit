@@ -252,6 +252,15 @@ enum AdminCommand {
 
     /// Print database memory usage statistics
     DatabaseMemoryUsage,
+
+    /// Print usage of Conduit's caches
+    CacheUsage,
+
+    /// Change capacities of Conduit's caches
+    ChangeCacheCapacities {
+        /// The new cache capacity modifier
+        new_modifier: f64,
+    },
 }
 
 fn process_admin_command(
@@ -419,6 +428,159 @@ fn process_admin_command(
                 e
             )),
         },
+        AdminCommand::CacheUsage => {
+            let mut message = String::new();
+            {
+                let pdu_cache = db.rooms.pdu_cache.lock().unwrap();
+                message += &format!(
+                    "pdu_cache: {} / {}\n",
+                    pdu_cache.len(),
+                    pdu_cache.capacity()
+                );
+            }
+            {
+                let auth_chain_cache = db.rooms.auth_chain_cache.lock().unwrap();
+                message += &format!(
+                    "auth_chain_cache: {} / {}\n",
+                    auth_chain_cache.len(),
+                    auth_chain_cache.capacity()
+                );
+            }
+            {
+                let shorteventid_cache = db.rooms.shorteventid_cache.lock().unwrap();
+                message += &format!(
+                    "shorteventid_cache: {} / {}\n",
+                    shorteventid_cache.len(),
+                    shorteventid_cache.capacity()
+                );
+            }
+            {
+                let eventidshort_cache = db.rooms.eventidshort_cache.lock().unwrap();
+                message += &format!(
+                    "eventidshort_cache: {} / {}\n",
+                    eventidshort_cache.len(),
+                    eventidshort_cache.capacity()
+                );
+            }
+            {
+                let shortstatekey_cache = db.rooms.shortstatekey_cache.lock().unwrap();
+                message += &format!(
+                    "shortstatekey_cache: {} / {}\n",
+                    shortstatekey_cache.len(),
+                    shortstatekey_cache.capacity()
+                );
+            }
+            {
+                let statekeyshort_cache = db.rooms.statekeyshort_cache.lock().unwrap();
+                message += &format!(
+                    "statekeyshort_cache: {} / {}\n",
+                    statekeyshort_cache.len(),
+                    statekeyshort_cache.capacity()
+                );
+            }
+            {
+                let our_real_users_cache = db.rooms.our_real_users_cache.read().unwrap();
+                message += &format!(
+                    "our_real_users_cache: {} / {}\n",
+                    our_real_users_cache.len(),
+                    our_real_users_cache.capacity()
+                );
+            }
+            {
+                let appservice_in_room_cache = db.rooms.appservice_in_room_cache.read().unwrap();
+                message += &format!(
+                    "appservice_in_room_cache: {} / {}\n",
+                    appservice_in_room_cache.len(),
+                    appservice_in_room_cache.capacity()
+                );
+            }
+            {
+                let lazy_load_waiting = db.rooms.lazy_load_waiting.lock().unwrap();
+                message += &format!(
+                    "lazy_load_waiting: {} / {}\n",
+                    lazy_load_waiting.len(),
+                    lazy_load_waiting.capacity()
+                );
+            }
+            {
+                let stateinfo_cache = db.rooms.stateinfo_cache.lock().unwrap();
+                message += &format!(
+                    "stateinfo_cache: {} / {}\n",
+                    stateinfo_cache.len(),
+                    stateinfo_cache.capacity()
+                );
+            }
+            {
+                let userdevicesessionid_uiaarequest =
+                    db.uiaa.userdevicesessionid_uiaarequest.read().unwrap();
+                message += &format!(
+                    "userdevicesessionid_uiaarequest: {} / ?\n",
+                    userdevicesessionid_uiaarequest.len()
+                );
+            }
+            {
+                let actual_destination_cache = db.globals.actual_destination_cache.read().unwrap();
+                message += &format!(
+                    "actual_destination_cache: {} / {}\n",
+                    actual_destination_cache.len(),
+                    actual_destination_cache.capacity()
+                );
+            }
+            RoomMessageEventContent::text_plain(message)
+        }
+        AdminCommand::ChangeCacheCapacities { new_modifier } => {
+            {
+                db.rooms
+                    .pdu_cache
+                    .lock()
+                    .unwrap()
+                    .set_capacity((100_000.0 * new_modifier) as usize);
+            }
+            {
+                db.rooms
+                    .auth_chain_cache
+                    .lock()
+                    .unwrap()
+                    .set_capacity((100_000.0 * new_modifier) as usize);
+            }
+            {
+                db.rooms
+                    .shorteventid_cache
+                    .lock()
+                    .unwrap()
+                    .set_capacity((100_000.0 * new_modifier) as usize);
+            }
+            {
+                db.rooms
+                    .eventidshort_cache
+                    .lock()
+                    .unwrap()
+                    .set_capacity((100_000.0 * new_modifier) as usize);
+            }
+            {
+                db.rooms
+                    .shortstatekey_cache
+                    .lock()
+                    .unwrap()
+                    .set_capacity((100_000.0 * new_modifier) as usize);
+            }
+            {
+                db.rooms
+                    .statekeyshort_cache
+                    .lock()
+                    .unwrap()
+                    .set_capacity((100_000.0 * new_modifier) as usize);
+            }
+            {
+                db.rooms
+                    .stateinfo_cache
+                    .lock()
+                    .unwrap()
+                    .set_capacity((100.0 * new_modifier) as usize);
+            }
+
+            RoomMessageEventContent::text_plain("Cache capacities changed")
+        }
     };
 
     Ok(reply_message_content)

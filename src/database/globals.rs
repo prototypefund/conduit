@@ -260,6 +260,10 @@ impl Globals {
         &self.config.turn_secret
     }
 
+    pub fn conduit_cache_capacity_modifier(&self) -> f64 {
+        self.config.conduit_cache_capacity_modifier
+    }
+
     /// TODO: the key valid until timestamp is only honored in room version > 4
     /// Remove the outdated keys and insert the new ones.
     ///
